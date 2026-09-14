@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://hknvyrm7s7lr"]
+
+[ext_resource type="Texture2D" uid="uid://ctojpcbnexpm3" path="res://godot_prototype/the-blue-balls-of-a-vervet-monkey-v0-2y77fyealwg31.webp" id="1_df5x1"]
+[ext_resource type="Texture2D" uid="uid://dx02n26igb6qf" path="res://godot_prototype/AprendizTesteV2.png" id="2_2njtp"]
+
+[sub_resource type="GDScript" id="GDScript_p7juh"]
+script/source = "extends CharacterBody2D
+
+
+const SPEED = 300.0
+const JUMP_VELOCITY = -400.0
+
+
+func _physics_process(delta: float) -> void:
+	# Add the gravity.
+	# Handle jump.
+	# Get the input direction and handle the movement/deceleration.
+	# As good practice, you should replace UI actions with custom gameplay actions.
+	var direction := Input.get_axis(\"ui_left\", \"ui_right\")
+	if direction:
+		velocity.x = direction * SPEED
+	else:
+		velocity.x = move_toward(velocity.x, 0, SPEED)
+	var cimabaixo := Input.get_axis(\"ui_up\", \"ui_down\")
+	if cimabaixo:
+		velocity.y = cimabaixo * SPEED
+	else:
+		velocity.y = move_toward(velocity.y, 0, SPEED)
+
+	move_and_slide()
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8wi8e"]
+
+[node name="Arena" type="Node2D" unique_id=746263771]
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1914500316]
+offset_right = 640.0
+offset_bottom = 853.0
+texture = ExtResource("1_df5x1")
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1281669243]
+position = Vector2(200, 200)
+script = SubResource("GDScript_p7juh")
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=172438880]
+
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=626703994]
+texture_filter = 1
+position = Vector2(4.5, 72.56015)
+scale = Vector2(6, 6)
+texture = ExtResource("2_2njtp")
+
+[node name="Boss" type="Node2D" parent="." unique_id=160323768]
+position = Vector2(500, 200)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=638945910]
+shape = SubResource("RectangleShape2D_8wi8e")
