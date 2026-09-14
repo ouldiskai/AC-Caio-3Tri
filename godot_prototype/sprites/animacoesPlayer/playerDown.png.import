@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ck8eomic8fvwl"
-path="res://.godot/imported/AprendizTeste.png-0ace9ff533047bb1e4f8487318da11aa.ctex"
+uid="uid://6aroslb7ynbf"
+path="res://.godot/imported/playerDown.png-d98aa58fa8496a4e4f4b46be2590dae9.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://godot_prototype/AprendizTeste.png"
-dest_files=["res://.godot/imported/AprendizTeste.png-0ace9ff533047bb1e4f8487318da11aa.ctex"]
+source_file="res://godot_prototype/sprites/animacoesPlayer/playerDown.png"
+dest_files=["res://.godot/imported/playerDown.png-d98aa58fa8496a4e4f4b46be2590dae9.ctex"]
 
 [params]
 
