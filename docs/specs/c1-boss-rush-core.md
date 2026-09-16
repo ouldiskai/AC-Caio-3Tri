@@ -93,8 +93,68 @@ Prototipar uma run de boss rush com 4 chefes, ordem aleatória, escolhas permane
   - Quando a tela de fim for exibida,
   - Então o jogo deve mostrar status finais do jogador, tempo de partida e habilidades adquiridas.
 
+### REQ-BOSS-08
+- Prioridade: Alta
+- Status: Provisório
+- Identificador: REQ-BOSS-08
+- Origem: decisão do aluno para o protótipo de combate 1x1; prioriza tensão e ritmo rápido para validar a leitura de padrões do boss em um cenário exigente.
+- Critério de aceitação:
+  - Dado que uma partida de boss único começa,
+  - Quando o protótipo carregar,
+  - Então o jogador deve iniciar com 90 HP e o boss deve iniciar com 220 HP.
+  - E dado que o jogador tenta executar um parry,
+  - Quando a janela de tempo do golpe for aberta,
+  - Então a janela aceitável para sucesso deve ser de 100 ms.
+  - E dado que o jogador falha o parry,
+  - Quando o ataque do boss conectar,
+  - Então a penalidade deve causar dano elevado e reduzir o controle do combate para manter a pressão do protótipo.
+
+### REQ-BOSS-09
+- Prioridade: Alta
+- Status: Provisório
+- Identificador: REQ-BOSS-09
+- Origem: escolha do aluno de reduzir o protótipo a um único boss com 3 padrões de ataque distintos para validar leitura de padrão e timing antes de ampliar para a run completa.
+- Critério de aceitação:
+  - Dado que o protótipo de combate do boss único é carregado,
+  - Quando a luta começar,
+  - Então o boss deve alternar entre 3 padrões de ataque distintos e reconhecíveis: porrete no chão à frente, dash para frente e bola de fogo disparada.
+  - E dado que o jogador acerta o parry em um ataque do padrão,
+  - Quando o ataque for defletido,
+  - Então o jogo deve executar um contra-ataque imediato e claro para sinalizar o sucesso da leitura.
+  - E dado que o protótipo não inclui a run completa,
+  - Quando a validação começar,
+  - Então o jogo não deve apresentar seleção de habilidades, mudança de boss ou progressão entre chefes.
+
+### REQ-BOSS-10
+- Prioridade: Alta
+- Status: Provisório
+- Identificador: REQ-BOSS-10
+- Origem: decisão do aluno de usar o ataque de porrete como o gesto de ensino do parry, com leitura mais lenta e mais clara para a primeira aprendizagem.
+- Critério de aceitação:
+  - Dado que o boss inicia o ataque de porrete,
+  - Quando a animação de impacto no chão à frente for exibida,
+  - Então o golpe deve ser suficientemente lento para que o jogador tenha tempo de identificar a janela de parry.
+  - E dado que o ataque de porrete for o primeiro padrão do protótipo,
+  - Quando o jogador acertar o parry,
+  - Então o jogo deve confirmar o sucesso com contra-ataque imediato e feedback claro.
+
+### REQ-BOSS-11
+- Prioridade: Alta
+- Status: Provisório
+- Identificador: REQ-BOSS-11
+- Origem: decisão do aluno sobre a ordem de apresentação dos padrões de ataque do boss para ensinar posicionamento e alternância de distância.
+- Critério de aceitação:
+  - Dado que o protótipo inicia a primeira sequência de combate,
+  - Quando o boss usar o primeiro padrão,
+  - Então ele deve começar com o porrete para punir o jogador por ficar muito perto e forçar uma distância média.
+  - E dado que o jogador se mantém muito próximo após o porrete,
+  - Quando o boss usar o dash,
+  - Então o dash deve quebrar a distância de segurança e forçar o jogador a alternar de posicionamento.
+  - E dado que o jogador se afasta demais ou fica parado esperando o boss,
+  - Quando o boss usar a bola de fogo,
+  - Então a bola de fogo deve punir esse comportamento e obrigar a reconfiguração de distância.
+
 ## Perguntas em aberto
-- Qual deve ser a regra inicial de vida, dano e janela de parry para o protótipo?
 - Quais habilidades de cada boss devem estar prontas para a primeira build?
 - Como a progressão de boss para boss deve ser visualmente comunicada ao jogador?
 

@@ -21,6 +21,7 @@
 ## Blocos e dependências
 - Dependência de design: o parry e a regra de contra-ataque precisam ser confirmados pelo playtest.
 - Dependência técnica: construir um controller simples do jogador e do boss em ataque/defesa.
+- Implementação atual: boss em 1x1 com 3 padrões (porrete, dash, bola de fogo), HP do jogador em 90 e do boss em 220, parry com janela de 100 ms.
 
 ## Próximo passo
 - Implementar o protótipo de chefe único e validar se o parry produz a sensação de risco e recompensa pretendida.

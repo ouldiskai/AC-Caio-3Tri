@@ -26,3 +26,8 @@ Sensação de evolução e superação: cada chefão ensina ao jogador uma forma
 - O jogador perde ao chegar a 0 de HP.
 - A recompensa por parry é contra-ataque imediato após a deflexão do último ataque em sequência.
 - Falha no parry causa dano e vulnerabilidade, mas sem stunlock infinito.
+- Para o protótipo inicial de combate 1x1, o jogador começa com 90 HP, o boss com 220 HP e a janela de parry aceita 100 ms; a intenção é priorizar tensão e ritmo rápido para aprender o padrão de ataque.
+- O primeiro protótipo válido deve incluir um boss único com 3 padrões de ataque distintos e uma resposta de contra-ataque clara, para testar leitura de padrão e timing sem expandir o escopo para a run completa.
+- Os 3 padrões do boss no protótipo são: ataque de porrete no chão à frente, dash para frente e bola de fogo arremessada; esses ataques serão usados como a base do aprendizado do timing do jogador.
+- O ataque de porrete será a introdução do parry: ele é um golpe mais lento, com leitura clara e tempo suficiente para o jogador reagir e encaixar a deflexão antes de os padrões mais agressivos entrarem em cena.
+- A sequência de ensino do protótipo será porrete, dash e bola de fogo: o porrete começa punindo a proximidade excessiva para forçar distância média; o dash quebra essa distância e obriga o jogador a alternar a posição; a bola de fogo pune a distância excessiva ou a espera passiva do jogador.

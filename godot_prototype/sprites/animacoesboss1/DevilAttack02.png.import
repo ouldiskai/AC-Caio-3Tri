@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ctojpcbnexpm3"
-path="res://.godot/imported/the-blue-balls-of-a-vervet-monkey-v0-2y77fyealwg31.webp-affcc2ab0cb39fa95fbe9383b69595fc.ctex"
+uid="uid://dopblrs612xx4"
+path="res://.godot/imported/DevilAttack02.png-36a2367ac35e058b158034a2c4ae6ca2.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://godot_prototype/the-blue-balls-of-a-vervet-monkey-v0-2y77fyealwg31.webp"
-dest_files=["res://.godot/imported/the-blue-balls-of-a-vervet-monkey-v0-2y77fyealwg31.webp-affcc2ab0cb39fa95fbe9383b69595fc.ctex"]
+source_file="res://godot_prototype/sprites/animacoesboss1/DevilAttack02.png"
+dest_files=["res://.godot/imported/DevilAttack02.png-36a2367ac35e058b158034a2c4ae6ca2.ctex"]
 
 [params]
 
