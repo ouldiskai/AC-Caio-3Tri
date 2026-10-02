@@ -67,9 +67,12 @@ func _on_boss_attack_hit(attack_info):
 	if player.check_parry():
 		player.show_parry_effect()
 		boss.stun_for(1.0)
+		player.take_hit_from(boss.global_position, max(1, int(dmg * 0.35)), 0.45)
 		print("Parry success: boss stunned for 1.0s")
 		return
-	player.apply_damage(dmg)
+	if boss.global_position.distance_to(player.global_position) > float(attack_info.get("range", 0.0)):
+		return
+	player.take_hit_from(boss.global_position, dmg, 1.0)
 	print("Parry failed: player took %s damage" % dmg)
 	_check_end_conditions()
 

@@ -29,7 +29,7 @@ var parry_effect: ColorRect
 
 func _ready():
 	spawn_position = global_position
-	collision_layer = 1
+	collision_layer = 4
 	collision_mask = 1
 	hp = max_hp
 	_create_health_bar()
@@ -61,6 +61,8 @@ func _physics_process(delta):
 
 	if Input.is_action_just_pressed("jump") and is_on_floor() and not is_rolling:
 		velocity.y = jump_force
+		if animated_sprite != null:
+			animated_sprite.play("jump")
 
 	if Input.is_action_just_pressed("roll"):
 		dodge()
@@ -169,6 +171,15 @@ func apply_damage(dmg: int):
 	_update_health_bar()
 	if hp <= 0:
 		respawn()
+
+func take_hit_from(source_position: Vector2, dmg: int, knockback_scale: float = 1.0):
+	apply_damage(dmg)
+	var push_direction: float = 1.0
+	if source_position != Vector2.ZERO:
+		push_direction = -1.0 if global_position.x <= source_position.x else 1.0
+	velocity.x = push_direction * 180.0 * knockback_scale
+	if animated_sprite != null:
+		animated_sprite.play("jump")
 
 func respawn() -> void:
 	hp = max_hp

@@ -1,4 +1,3 @@
-res://godot_prototype/scripts/quick_test.gd
 res://godot_prototype/scripts/boss.gd
+res://godot_prototype/scripts/game_controller.gd
 res://godot_prototype/scripts/player.gd
-res://arena.tscn
