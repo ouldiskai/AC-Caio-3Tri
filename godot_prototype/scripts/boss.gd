@@ -5,10 +5,10 @@ const GRAVITY: float = 1200.0
 # Boss controller for the 1v1 prototype
 @export var max_hp: int = 220
 @export var attack_damage: int = 15
-@export var attack_interval: float = 2.0
+@export var attack_interval: float = 2.4
 @export var attack_sequence: Array[String] = ["attack1", "attack2", "fireball"]
-@export var move_speed: float = 160.0
-@export var dash_speed: float = 320.0
+@export var move_speed: float = 110.0
+@export var dash_speed: float = 260.0
 @export var melee_reach: float = 120.0
 @export var dash_reach: float = 240.0
 @export var fireball_reach: float = 420.0
@@ -76,11 +76,11 @@ func _physics_process(delta):
 		if distance > 0.1:
 			direction = direction.normalized()
 			if not is_attack_pattern_active():
-				var desired_distance := 170.0
+				var desired_distance := 210.0
 				var steering := 0.0
-				if distance > desired_distance + 30.0:
+				if distance > desired_distance + 45.0:
 					steering = 1.0
-				elif distance < desired_distance - 30.0:
+				elif distance < desired_distance - 45.0:
 					steering = -1.0
 				else:
 					steering = 0.0
@@ -136,19 +136,24 @@ func _create_weapon_sprite() -> void:
 	weapon_sprite.name = "DevilsClub"
 	weapon_sprite.texture = texture
 	weapon_sprite.visible = false
-	weapon_sprite.scale = Vector2(1.0, 1.0)
-	weapon_sprite.position = Vector2(85.0, 10.0)
+	weapon_sprite.scale = Vector2(2.2, 2.2)
+	weapon_sprite.modulate = Color(1, 1, 1, 0.0)
+	weapon_sprite.position = Vector2(100.0, 12.0)
 	add_child(weapon_sprite)
 
 func _update_boss_facing() -> void:
 	if animated_sprite == null or player == null:
 		return
 	var facing_direction = player.global_position.x - global_position.x
-	animated_sprite.flip_h = facing_direction < 0.0
+	var should_face_right = facing_direction >= 0.0
+	var base_scale_x = abs(animated_sprite.scale.x)
+	animated_sprite.scale.x = base_scale_x if should_face_right else -base_scale_x
 	if weapon_sprite != null:
-		weapon_sprite.visible = true
-		weapon_sprite.position = Vector2(85.0 if facing_direction >= 0.0 else -85.0, 10.0)
-		weapon_sprite.flip_h = facing_direction < 0.0
+		weapon_sprite.scale = Vector2(2.2, 2.2)
+		weapon_sprite.position = Vector2(100.0 if should_face_right else -100.0, 12.0)
+		weapon_sprite.visible = false
+		weapon_sprite.modulate = Color(1, 1, 1, 0.0)
+		weapon_sprite.scale.x = abs(weapon_sprite.scale.x) if should_face_right else -abs(weapon_sprite.scale.x)
 
 func _resolve_attack_reach(attack_name: String) -> float:
 	match attack_name:
@@ -262,6 +267,8 @@ func _spawn_fireball_projectile(attack_info: Dictionary) -> void:
 	var projectile = Area2D.new()
 	var shape = CollisionShape2D.new()
 	var circle = CircleShape2D.new()
+	var fireball_sprite = Sprite2D.new()
+	var fireball_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBallProjectil.png")
 	circle.radius = 24.0
 	shape.shape = circle
 	projectile.add_child(shape)
@@ -269,15 +276,28 @@ func _spawn_fireball_projectile(attack_info: Dictionary) -> void:
 	projectile.monitorable = true
 	projectile.collision_layer = 0
 	projectile.collision_mask = 1 | 4
+	if fireball_texture != null:
+		fireball_sprite.texture = fireball_texture
+		fireball_sprite.scale = Vector2(1.5, 1.5)
+		projectile.add_child(fireball_sprite)
+	else:
+		fireball_sprite.modulate = Color(1.0, 0.5, 0.1, 1.0)
+		fireball_sprite.scale = Vector2(1.0, 1.0)
+		projectile.add_child(fireball_sprite)
 	var direction = Vector2.RIGHT if player.global_position.x >= global_position.x else Vector2.LEFT
 	projectile.global_position = global_position + Vector2(direction.x * 70.0, -12.0)
 	projectile.body_entered.connect(_on_attack_hitbox_body_entered.bind(attack_info))
 	add_child(projectile)
-	var travel = attack_info.get("range", float(fireball_reach))
+	var travel = float(attack_info.get("range", fireball_reach))
 	var tween = get_tree().create_tween()
 	tween.tween_property(projectile, "global_position", projectile.global_position + direction * travel, 1.1)
 	tween.tween_callback(func():
 		if is_instance_valid(projectile):
+			if player != null and projectile.global_position.distance_to(player.global_position) <= 40.0:
+				if player.has_method("take_hit_from"):
+					player.take_hit_from(global_position, int(attack_info.get("damage", 0)), float(attack_info.get("knockback", 1.0)))
+				elif player.has_method("apply_damage"):
+					player.apply_damage(int(attack_info.get("damage", 0)))
 			projectile.queue_free()
 	)
 
@@ -285,13 +305,16 @@ func _on_attack_hitbox_body_entered(body: Node2D, attack_info: Dictionary) -> vo
 	if body != player:
 		return
 	var attack_range = float(attack_info.get("range", melee_reach))
-	if player.global_position.distance_to(global_position) > attack_range:
+	var hit_position = global_position if attack_info.get("type") == "fireball" else global_position
+	if player.global_position.distance_to(hit_position) > attack_range and attack_info.get("type") != "fireball":
 		return
 	if player.has_method("take_hit_from"):
-		player.take_hit_from(global_position, int(attack_info.get("damage", 0)), float(attack_info.get("knockback", 1.0)))
+		player.take_hit_from(hit_position, int(attack_info.get("damage", 0)), float(attack_info.get("knockback", 1.0)))
 	else:
 		if player.has_method("apply_damage"):
 			player.apply_damage(int(attack_info.get("damage", 0)))
+	if is_instance_valid(body):
+		body.set_meta("last_hit_by_fireball", true)
 	print("Boss attack hit the player for %s" % attack_info.get("damage", 0))
 
 func stun_for(seconds: float) -> void:
