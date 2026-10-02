@@ -13,6 +13,9 @@ const GRAVITY: float = 1200.0
 @export var roll_duration: float = 0.35
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
+@onready var weapon_sprite: Sprite2D = $Sprite2D
+@onready var weapon_slash: AnimatedSprite2D = $Sprite2D/AnimatedSprite2D
+@onready var weapon_parry: AnimatedSprite2D = $AnimatedSprite2D2
 
 var hp: int
 var can_parry: bool = false
@@ -25,18 +28,73 @@ var roll_cooldown_timer: float = 0.0
 var spawn_position: Vector2 = Vector2.ZERO
 var invulnerability_timer: float = 0.0
 var health_bar: ProgressBar
-var parry_effect: ColorRect
 
 func _ready():
 	spawn_position = global_position
 	collision_layer = 4
 	collision_mask = 1
 	hp = max_hp
+	_reset_weapon_effects()
+	_update_weapon_orientation()
 	_create_health_bar()
-	_create_parry_effect()
 	_update_health_bar()
 	if animated_sprite != null:
 		animated_sprite.play("idle")
+
+func _reset_weapon_effects() -> void:
+	if weapon_slash != null:
+		weapon_slash.visible = false
+		weapon_slash.stop()
+	if weapon_parry != null:
+		weapon_parry.visible = false
+		weapon_parry.stop()
+
+func _update_weapon_orientation() -> void:
+	if weapon_sprite == null:
+		return
+	var facing_right := facing.x >= 0.0
+	weapon_sprite.visible = not is_rolling
+	weapon_sprite.position = Vector2(17.0 if facing_right else -17.0, 16.0)
+	weapon_sprite.rotation = 0.76096356 if facing_right else -0.76096356
+	weapon_sprite.flip_h = not facing_right
+	if weapon_slash != null:
+		weapon_slash.position = Vector2(3.57 if facing_right else -3.57, -7.27)
+		weapon_slash.rotation = -0.5235988 if facing_right else 0.5235988
+		weapon_slash.flip_h = not facing_right
+		weapon_slash.visible = weapon_slash.visible and not is_rolling
+	if weapon_parry != null:
+		weapon_parry.position = Vector2(34.0 if facing_right else -34.0, -2.0)
+		weapon_parry.scale = Vector2(3.0, 3.0)
+		weapon_parry.flip_h = not facing_right
+		weapon_parry.visible = weapon_parry.visible and not is_rolling
+
+func _play_weapon_slash() -> void:
+	if weapon_slash == null or is_rolling:
+		return
+	weapon_slash.visible = true
+	weapon_slash.flip_h = facing.x < 0.0
+	weapon_slash.play("slash")
+	var tween = get_tree().create_tween()
+	tween.tween_interval(0.18)
+	tween.tween_callback(func():
+		if weapon_slash != null:
+			weapon_slash.visible = false
+			weapon_slash.stop()
+	)
+
+func _play_weapon_parry() -> void:
+	if weapon_parry == null or is_rolling:
+		return
+	weapon_parry.visible = true
+	weapon_parry.flip_h = facing.x < 0.0
+	weapon_parry.play("parry")
+	var tween = get_tree().create_tween()
+	tween.tween_interval(0.18)
+	tween.tween_callback(func():
+		if weapon_parry != null:
+			weapon_parry.visible = false
+			weapon_parry.stop()
+	)
 
 func _physics_process(delta):
 	if invulnerability_timer > 0.0:
@@ -79,9 +137,10 @@ func _physics_process(delta):
 	if direction != Vector2.ZERO:
 		facing = direction.normalized()
 		facing.x = clampf(facing.x, -1.0, 1.0)
+		_update_weapon_orientation()
 		if not is_rolling:
 			velocity.x = direction.x * move_speed
-			if animated_sprite != null:
+			if animated_sprite != null and animated_sprite.animation not in ["attack", "parry", "dash"]:
 				if direction.x < 0:
 					animated_sprite.flip_h = true
 					animated_sprite.play("ui_left")
@@ -93,7 +152,7 @@ func _physics_process(delta):
 	else:
 		if not is_rolling:
 			velocity.x = move_toward(velocity.x, 0.0, move_speed)
-		if animated_sprite != null and not is_rolling:
+		if animated_sprite != null and not is_rolling and animated_sprite.animation not in ["attack", "parry", "dash"]:
 			if animated_sprite.animation != "idle":
 				animated_sprite.play("idle")
 	move_and_slide()
@@ -126,7 +185,17 @@ func _update_health_bar() -> void:
 
 func attack():
 	if animated_sprite != null:
-		animated_sprite.play("idle")
+		animated_sprite.play("attack")
+		_play_weapon_slash()
+		var tween = get_tree().create_tween()
+		tween.tween_interval(0.18)
+		tween.tween_callback(func():
+			if animated_sprite != null and animated_sprite.animation == "attack":
+				if is_rolling:
+					animated_sprite.play("dash")
+				else:
+					animated_sprite.play("idle")
+		)
 	return {"damage": attack_damage, "type": "attack"}
 
 func start_parry():
@@ -140,32 +209,23 @@ func check_parry():
 	var success = elapsed <= parry_window_ms
 	can_parry = false
 	if success:
-		show_parry_effect()
+		if animated_sprite != null:
+			animated_sprite.play("parry")
+			_play_weapon_parry()
+			var tween = get_tree().create_tween()
+			tween.tween_interval(0.15)
+			tween.tween_callback(func():
+				if animated_sprite != null and animated_sprite.animation == "parry":
+					if is_rolling:
+						animated_sprite.play("dash")
+					else:
+						animated_sprite.play("idle")
+			)
 	return success
 
-func show_parry_effect() -> void:
-	if parry_effect == null:
-		_create_parry_effect()
-	parry_effect.visible = true
-	parry_effect.modulate = Color(1.0, 1.0, 0.4, 1.0)
-	var tween = get_tree().create_tween()
-	tween.tween_property(parry_effect, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(func():
-		parry_effect.visible = false
-	)
-
-func _create_parry_effect() -> void:
-	if parry_effect != null:
-		return
-	parry_effect = ColorRect.new()
-	parry_effect.size = Vector2(120, 120)
-	parry_effect.position = Vector2(-60, -60)
-	parry_effect.color = Color(1.0, 0.9, 0.4, 1.0)
-	parry_effect.modulate = Color(1.0, 1.0, 0.4, 0.0)
-	parry_effect.visible = false
-	add_child(parry_effect)
-
 func apply_damage(dmg: int):
+	if invulnerability_timer > 0.0:
+		return
 	hp -= dmg
 	hp = max(hp, 0)
 	_update_health_bar()
@@ -173,6 +233,8 @@ func apply_damage(dmg: int):
 		respawn()
 
 func take_hit_from(source_position: Vector2, dmg: int, knockback_scale: float = 1.0):
+	if invulnerability_timer > 0.0:
+		return
 	apply_damage(dmg)
 	var push_direction: float = 1.0
 	if source_position != Vector2.ZERO:
@@ -203,6 +265,9 @@ func dodge():
 		roll_cooldown_timer = dodge_cooldown
 		is_rolling = true
 		roll_timer = roll_duration
+		invulnerability_timer = max(invulnerability_timer, roll_duration + 0.1)
+		if animated_sprite != null:
+			animated_sprite.play("dash")
 		if facing.x == 0.0:
 			facing.x = 1.0 if animated_sprite != null and not animated_sprite.flip_h else -1.0
 		velocity.x = facing.x * roll_speed
@@ -212,6 +277,8 @@ func dodge():
 		_ignore.tween_callback(func():
 			collision_mask = 1
 			is_rolling = false
+			if animated_sprite != null and animated_sprite.animation == "dash":
+				animated_sprite.play("idle")
 		)
 		return true
 	return false

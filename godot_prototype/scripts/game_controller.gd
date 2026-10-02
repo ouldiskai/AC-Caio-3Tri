@@ -20,6 +20,8 @@ func _build_controls_hud() -> void:
 	controls_canvas.name = "ControlsHUD"
 	add_child(controls_canvas)
 
+	
+
 	var panel = PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	panel.position = Vector2(18, 18)
@@ -65,7 +67,6 @@ func _on_boss_attack_started(attack_info):
 func _on_boss_attack_hit(attack_info):
 	var dmg = attack_info.get("damage", 0)
 	if player.check_parry():
-		player.show_parry_effect()
 		boss.stun_for(1.0)
 		player.take_hit_from(boss.global_position, max(1, int(dmg * 0.35)), 0.45)
 		print("Parry success: boss stunned for 1.0s")
