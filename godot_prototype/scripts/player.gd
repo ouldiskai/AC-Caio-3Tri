@@ -22,10 +22,15 @@ var facing: Vector2 = Vector2.RIGHT
 var is_rolling: bool = false
 var roll_timer: float = 0.0
 var roll_cooldown_timer: float = 0.0
+var spawn_position: Vector2 = Vector2.ZERO
+var invulnerability_timer: float = 0.0
 var health_bar: ProgressBar
 var parry_effect: ColorRect
 
 func _ready():
+	spawn_position = global_position
+	collision_layer = 1
+	collision_mask = 1
 	hp = max_hp
 	_create_health_bar()
 	_create_parry_effect()
@@ -34,6 +39,9 @@ func _ready():
 		animated_sprite.play("idle")
 
 func _physics_process(delta):
+	if invulnerability_timer > 0.0:
+		invulnerability_timer -= delta
+
 	if dodge_timer > 0:
 		dodge_timer -= delta
 
@@ -44,6 +52,7 @@ func _physics_process(delta):
 		if roll_timer <= 0.0:
 			is_rolling = false
 			roll_timer = 0.0
+			collision_mask = 1
 
 	if not is_on_floor():
 		velocity.y += GRAVITY * delta
@@ -158,6 +167,21 @@ func apply_damage(dmg: int):
 	hp -= dmg
 	hp = max(hp, 0)
 	_update_health_bar()
+	if hp <= 0:
+		respawn()
+
+func respawn() -> void:
+	hp = max_hp
+	velocity = Vector2.ZERO
+	global_position = spawn_position
+	invulnerability_timer = 1.0
+	collision_mask = 1
+	is_rolling = false
+	roll_timer = 0.0
+	roll_cooldown_timer = 0.0
+	_update_health_bar()
+	if animated_sprite != null:
+		animated_sprite.play("idle")
 
 func can_dodge():
 	return dodge_timer <= 0 and roll_cooldown_timer <= 0.0
@@ -171,7 +195,7 @@ func dodge():
 		if facing.x == 0.0:
 			facing.x = 1.0 if animated_sprite != null and not animated_sprite.flip_h else -1.0
 		velocity.x = facing.x * roll_speed
-		collision_mask = 0
+		collision_mask = 1
 		var _ignore = get_tree().create_tween()
 		_ignore.tween_interval(roll_duration)
 		_ignore.tween_callback(func():

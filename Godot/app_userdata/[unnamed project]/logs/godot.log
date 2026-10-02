@@ -13,15 +13,13 @@ Prototype started: boss 1v1
 Boss started attack: club_slam
 Parry failed: player took 15 damage
 Boss started attack: dash
+Boss attack hit the player for 15
 Parry failed: player took 15 damage
 Boss started attack: fireball
 Boss attack hit the player for 15
-Parry success: boss stunned for 1.0s
+Parry failed: player took 15 damage
 Boss started attack: club_slam
-Parry success: boss stunned for 1.0s
+Parry failed: player took 15 damage
 Boss started attack: dash
 Boss attack hit the player for 15
-Parry success: boss stunned for 1.0s
-Boss started attack: fireball
-Boss attack hit the player for 15
-Parry success: boss stunned for 1.0s
+Parry failed: player took 15 damage

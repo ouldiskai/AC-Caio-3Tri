@@ -26,6 +26,8 @@ signal attack_started(attack_info)
 signal attack_hit(attack_info)
 
 func _ready():
+	collision_layer = 2
+	collision_mask = 1
 	hp = max_hp
 	attack_timer = 1.2
 	_create_health_bar()
