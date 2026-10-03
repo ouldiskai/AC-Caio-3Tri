@@ -5,13 +5,17 @@ extends Node2D
 @onready var boss: CharacterBody2D = $Boss2
 
 signal combat_ended(result)
+var match_ended: bool = false
 
 func _ready():
 	if player == null or boss == null:
 		return
 	boss.player = player
+	player.target = boss
 	boss.connect("attack_started", Callable(self, "_on_boss_attack_started"))
 	boss.connect("attack_hit", Callable(self, "_on_boss_attack_hit"))
+	boss.connect("defeated", Callable(self, "_check_end_conditions"))
+	player.died.connect(_on_player_died)
 	_build_controls_hud()
 	print("Prototype started: boss 1v1")
 
@@ -66,21 +70,58 @@ func _on_boss_attack_started(attack_info):
 
 func _on_boss_attack_hit(attack_info):
 	var dmg = attack_info.get("damage", 0)
+	if boss.global_position.distance_to(player.global_position) > float(attack_info.get("range", 0.0)):
+		return
 	if player.check_parry():
 		boss.stun_for(1.0)
-		player.take_hit_from(boss.global_position, max(1, int(dmg * 0.35)), 0.45)
-		print("Parry success: boss stunned for 1.0s")
-		return
-	if boss.global_position.distance_to(player.global_position) > float(attack_info.get("range", 0.0)):
+		print("Parry success: boss stunned for 1.0s; no damage dealt")
 		return
 	player.take_hit_from(boss.global_position, dmg, 1.0)
 	print("Parry failed: player took %s damage" % dmg)
 	_check_end_conditions()
 
 func _check_end_conditions():
+	if match_ended:
+		return
 	if boss.hp <= 0:
-		emit_signal("combat_ended", "victory")
-		print("Victory")
+		_finish_combat("victory")
 	elif player.hp <= 0:
-		emit_signal("combat_ended", "defeat")
+		_finish_combat("defeat")
+
+func _on_player_died() -> void:
+	_finish_combat("defeat")
+
+func _finish_combat(result: String) -> void:
+	if match_ended:
+		return
+	match_ended = true
+	emit_signal("combat_ended", result)
+	player.set_physics_process(false)
+	boss.set_physics_process(false)
+	if result == "victory":
+		_show_victory_message()
+		print("Boss defeated")
+		await get_tree().create_timer(2.5).timeout
+	else:
 		print("Defeat")
+	get_tree().change_scene_to_file("res://godot_prototype/scenes/main_menu.tscn")
+
+func _show_victory_message() -> void:
+	var overlay := CanvasLayer.new()
+	overlay.name = "VictoryMessage"
+	add_child(overlay)
+	var backdrop := ColorRect.new()
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = Color(0.0, 0.0, 0.0, 0.72)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(center)
+	var label := Label.new()
+	label.text = "Boss derrotado!\nObrigado por jogar."
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 36)
+	center.add_child(label)

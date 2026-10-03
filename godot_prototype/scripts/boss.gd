@@ -27,11 +27,13 @@ var dash_direction: float = 1.0
 var dash_timer: float = 0.0
 var weapon_sprite: Sprite2D
 var current_attack_name: String = ""
+var last_attack_name: String = ""
 var attack_lunge_timer: float = 0.0
 var attack_lunge_direction: float = 1.0
 
 signal attack_started(attack_info)
 signal attack_hit(attack_info)
+signal defeated
 
 func _ready():
 	collision_layer = 8
@@ -162,7 +164,7 @@ func _update_boss_facing() -> void:
 		return
 	var facing_direction = player.global_position.x - global_position.x
 	var should_face_right = facing_direction >= 0.0
-	animated_sprite.flip_h = not should_face_right
+	animated_sprite.flip_h = should_face_right
 	if weapon_sprite != null:
 		weapon_sprite.scale = Vector2(2.2, 2.2)
 		weapon_sprite.position = Vector2(100.0 if should_face_right else -100.0, 12.0)
@@ -173,7 +175,7 @@ func _update_boss_facing() -> void:
 func _resolve_attack_reach(attack_name: String) -> float:
 	match attack_name:
 		"attack1":
-			return melee_reach
+			return melee_reach + 50.0
 		"attack2":
 			return dash_reach
 		"fireball":
@@ -181,54 +183,29 @@ func _resolve_attack_reach(attack_name: String) -> float:
 		_:
 			return melee_reach
 
-func _build_fireball_animations() -> void:
+func _play_animation(animation_name: String) -> bool:
 	if animated_sprite == null:
-		return
+		return false
 	if animated_sprite.sprite_frames == null:
-		animated_sprite.sprite_frames = SpriteFrames.new()
-	if animated_sprite.sprite_frames.has_animation("fireball"):
-		return
-	var fireball_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBallPreparing.png")
-	var projectile_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBallProjectil.png")
-	var impact_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBall_Impact.png")
-	var fireball_frames: Array[Texture2D] = []
-	for index in range(7):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = fireball_texture
-		atlas.region = Rect2(index * 64.0, 0.0, 64.0, 64.0)
-		fireball_frames.append(atlas)
-	animated_sprite.sprite_frames.add_animation("fireball")
-	for frame in fireball_frames:
-		animated_sprite.sprite_frames.add_frame("fireball", frame)
-	animated_sprite.sprite_frames.set_animation_loop("fireball", false)
-	animated_sprite.sprite_frames.set_animation_speed("fireball", 8.0)
-
-func _play_animation(animation_name: String):
-	if animated_sprite == null:
-		return
-	if animated_sprite.sprite_frames == null:
-		return
+		return false
 	if not animated_sprite.sprite_frames.has_animation(animation_name):
-		if animation_name == "fireball":
-			_build_fireball_animations()
-		if not animated_sprite.sprite_frames.has_animation(animation_name):
-			if animated_sprite.animation != "idle":
-				animated_sprite.play("idle")
-			return
-	if animated_sprite.animation != animation_name:
+		if animated_sprite.animation != "idle":
+			animated_sprite.play("idle")
+		return false
+	if animated_sprite.animation != animation_name or not animated_sprite.is_playing():
 		animated_sprite.play(animation_name)
+	return animated_sprite.animation == animation_name and animated_sprite.is_playing()
 
-func _play_attack_animation(attack_name: String) -> void:
+func _play_attack_animation(attack_name: String) -> bool:
 	match attack_name:
 		"attack1":
-			_play_animation("attack1")
+			return _play_animation("attack1")
 		"attack2":
-			_play_animation("attack2")
+			return _play_animation("attack2")
 		"fireball":
-			_build_fireball_animations()
-			_play_animation("fireball")
+			return _play_animation("preparing")
 		_:
-			_play_animation("attack1")
+			return _play_animation("attack1")
 
 func is_attack_pattern_active() -> bool:
 	return attack_active
@@ -237,19 +214,34 @@ func _decide_attack_name(distance_to_player: float) -> String:
 	if distance_to_player <= melee_reach + 35.0:
 		return "attack1"
 	if distance_to_player <= dash_reach + 80.0:
-		return "attack2"
+		return "attack1" if last_attack_name == "attack2" else "attack2"
 	return "fireball"
 
 func _resolve_attack_hit_delay(attack_name: String) -> float:
 	match attack_name:
 		"attack1":
-			return 0.18
+			return _resolve_animation_frame_time("attack1", 5)
 		"attack2":
-			return 0.22
+			return _resolve_animation_frame_time("attack2", 5)
 		"fireball":
 			return 0.40
 		_:
 			return 0.18
+
+func _resolve_animation_frame_time(animation_name: String, impact_frame: int) -> float:
+	if animated_sprite == null or animated_sprite.sprite_frames == null:
+		return 0.18
+	var frames := animated_sprite.sprite_frames
+	if not frames.has_animation(animation_name):
+		return 0.18
+	var animation_speed := frames.get_animation_speed(animation_name)
+	if animation_speed <= 0.0:
+		return 0.18
+	var elapsed_frames := 0.0
+	var frame_count := mini(impact_frame, frames.get_frame_count(animation_name))
+	for frame_index in range(frame_count):
+		elapsed_frames += frames.get_frame_duration(animation_name, frame_index)
+	return elapsed_frames / animation_speed
 
 func trigger_attack():
 	if attack_active or player == null:
@@ -267,35 +259,55 @@ func trigger_attack():
 		"knockback": 1.0,
 		"hit_delay": hit_delay
 	}
+	if not _play_attack_animation(attack_name):
+		attack_timer = attack_interval
+		return
 	current_attack_name = attack_name
+	last_attack_name = attack_name
 	pattern_index += 1
 	attack_active = true
 	match attack_name:
 		"attack1":
-			_play_attack_animation("attack1")
 			attack_lunge_timer = 0.2
 			attack_lunge_direction = 1.0 if player.global_position.x >= global_position.x else -1.0
 		"attack2":
-			_play_attack_animation("attack2")
 			is_dashing = true
 			dash_direction = 1.0 if player.global_position.x >= global_position.x else -1.0
 			dash_timer = 0.45
-		"fireball":
-			_play_attack_animation("fireball")
-		_:
-			_play_attack_animation("attack1")
 	_spawn_attack_hitbox(attack_info)
 	emit_signal("attack_started", attack_info)
 	await get_tree().create_timer(hit_delay).timeout
+	if not attack_active or current_attack_name != attack_name or stun_timer > 0.0:
+		return
 	emit_signal("attack_hit", attack_info)
+	if attack_name in ["attack1", "attack2"] and stun_timer <= 0.0:
+		var recovery_time: float = _get_animation_duration(attack_name) - hit_delay
+		if recovery_time > 0.0:
+			await get_tree().create_timer(recovery_time).timeout
 	attack_active = false
 	current_attack_name = ""
 	attack_lunge_timer = 0.0
 	attack_timer = attack_interval
 	_play_animation("idle")
 
+func _get_animation_duration(animation_name: String) -> float:
+	if animated_sprite == null or animated_sprite.sprite_frames == null:
+		return 0.0
+	var frames := animated_sprite.sprite_frames
+	if not frames.has_animation(animation_name):
+		return 0.0
+	var animation_speed := frames.get_animation_speed(animation_name)
+	if animation_speed <= 0.0:
+		return 0.0
+	var total_frames := 0.0
+	for frame_index in range(frames.get_frame_count(animation_name)):
+		total_frames += frames.get_frame_duration(animation_name, frame_index)
+	return total_frames / animation_speed
+
 func _spawn_attack_hitbox(attack_info: Dictionary) -> void:
 	if player == null:
+		return
+	if attack_info.get("type") in ["attack1", "attack2"]:
 		return
 	if attack_info.get("type") == "fireball":
 		_spawn_fireball_projectile(attack_info)
@@ -333,29 +345,9 @@ func _spawn_fireball_projectile(attack_info: Dictionary) -> void:
 	var shape = CollisionShape2D.new()
 	var circle = CircleShape2D.new()
 	var fireball_sprite = AnimatedSprite2D.new()
-	var fireball_frames = SpriteFrames.new()
-	var projectile_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBallProjectil.png")
-	var impact_texture = load("res://godot_prototype/sprites/animacoesboss1/FireBall_Impact.png")
-	var projectile_count = 3
-	var impact_count = 6
+	var fireball_source: AnimatedSprite2D = $AnimatedSprite2D/AnimatedSprite2D2
 	var projectile_anim_name = "projectile"
 	var impact_anim_name = "impact"
-	fireball_frames.add_animation(projectile_anim_name)
-	for index in range(projectile_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = projectile_texture
-		atlas.region = Rect2(index * 64.0, 0.0, 64.0, 64.0)
-		fireball_frames.add_frame(projectile_anim_name, atlas)
-	fireball_frames.set_animation_loop(projectile_anim_name, true)
-	fireball_frames.set_animation_speed(projectile_anim_name, 10.0)
-	fireball_frames.add_animation(impact_anim_name)
-	for index in range(impact_count):
-		var atlas := AtlasTexture.new()
-		atlas.atlas = impact_texture
-		atlas.region = Rect2(index * 64.0, 0.0, 64.0, 64.0)
-		fireball_frames.add_frame(impact_anim_name, atlas)
-	fireball_frames.set_animation_loop(impact_anim_name, false)
-	fireball_frames.set_animation_speed(impact_anim_name, 12.0)
 	circle.radius = 24.0
 	shape.shape = circle
 	projectile.add_child(shape)
@@ -363,18 +355,23 @@ func _spawn_fireball_projectile(attack_info: Dictionary) -> void:
 	projectile.monitorable = true
 	projectile.collision_layer = 0
 	projectile.collision_mask = 1 | 4
-	fireball_sprite.sprite_frames = fireball_frames
+	fireball_sprite.sprite_frames = fireball_source.sprite_frames
 	fireball_sprite.scale = Vector2(1.5, 1.5)
 	fireball_sprite.play(projectile_anim_name)
 	projectile.add_child(fireball_sprite)
-	var direction = Vector2.RIGHT if player.global_position.x >= global_position.x else Vector2.LEFT
-	var muzzle_offset := Vector2(direction.x * 86.0, -24.0)
-	projectile.global_position = global_position + muzzle_offset
 	projectile.body_entered.connect(_on_attack_hitbox_body_entered.bind(attack_info))
 	add_child(projectile)
-	var travel = float(attack_info.get("range", fireball_reach))
+	var muzzle_position := animated_sprite.to_global(Vector2(0.0, -13.0))
+	projectile.global_position = muzzle_position
+	var target_position := player.global_position
+	var direction := muzzle_position.direction_to(target_position)
+	if direction.is_zero_approx():
+		direction = Vector2.RIGHT if player.global_position.x >= global_position.x else Vector2.LEFT
+	var travel := minf(float(attack_info.get("range", fireball_reach)), muzzle_position.distance_to(target_position))
+	var projectile_target := muzzle_position + direction * travel
+	var travel_duration := maxf(travel / 600.0, 0.1)
 	var tween = get_tree().create_tween()
-	tween.tween_property(projectile, "global_position", projectile.global_position + direction * travel, 1.1)
+	tween.tween_property(projectile, "global_position", projectile_target, travel_duration)
 	tween.tween_callback(func():
 		if is_instance_valid(projectile):
 			if fireball_sprite != null and fireball_sprite.is_inside_tree():
@@ -411,6 +408,8 @@ func _on_attack_hitbox_body_entered(body: Node2D, attack_info: Dictionary) -> vo
 func stun_for(seconds: float) -> void:
 	stun_timer = max(stun_timer, seconds)
 	velocity.x = 0.0
+	is_dashing = false
+	dash_timer = 0.0
 	attack_active = false
 	current_attack_name = ""
 	attack_lunge_timer = 0.0
@@ -418,6 +417,10 @@ func stun_for(seconds: float) -> void:
 	_play_animation("idle")
 
 func apply_damage(dmg: int):
+	if hp <= 0:
+		return
 	hp -= dmg
 	hp = max(hp, 0)
 	_update_health_bar()
+	if hp == 0:
+		emit_signal("defeated")

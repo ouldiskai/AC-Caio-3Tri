@@ -11,6 +11,8 @@ const GRAVITY: float = 1200.0
 @export var jump_force: float = -420.0
 @export var roll_speed: float = 420.0
 @export var roll_duration: float = 0.35
+@export var attack_range: float = 150.0
+@export var attack_cooldown: float = 0.7
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var weapon_sprite: Sprite2D = $Sprite2D
@@ -28,6 +30,11 @@ var roll_cooldown_timer: float = 0.0
 var spawn_position: Vector2 = Vector2.ZERO
 var invulnerability_timer: float = 0.0
 var health_bar: ProgressBar
+var target: Node2D
+var attack_cooldown_timer: float = 0.0
+var is_dead: bool = false
+
+signal died
 
 func _ready():
 	spawn_position = global_position
@@ -97,6 +104,9 @@ func _play_weapon_parry() -> void:
 	)
 
 func _physics_process(delta):
+	if attack_cooldown_timer > 0.0:
+		attack_cooldown_timer = maxf(attack_cooldown_timer - delta, 0.0)
+
 	if invulnerability_timer > 0.0:
 		invulnerability_timer -= delta
 
@@ -184,6 +194,9 @@ func _update_health_bar() -> void:
 		health_bar.modulate = Color(0.2, 0.2, 0.2, 1.0)
 
 func attack():
+	if is_rolling or attack_cooldown_timer > 0.0:
+		return {"damage": attack_damage, "type": "attack"}
+	attack_cooldown_timer = attack_cooldown
 	if animated_sprite != null:
 		animated_sprite.play("attack")
 		_play_weapon_slash()
@@ -195,6 +208,13 @@ func attack():
 					animated_sprite.play("dash")
 				else:
 					animated_sprite.play("idle")
+			if not is_instance_valid(target) or is_rolling:
+				return
+			var offset := target.global_position - global_position
+			var facing_target := absf(facing.x) < 0.1 or signf(offset.x) == signf(facing.x)
+			if absf(offset.x) <= attack_range and absf(offset.y) <= 100.0 and facing_target:
+				if target.has_method("apply_damage"):
+					target.apply_damage(attack_damage)
 		)
 	return {"damage": attack_damage, "type": "attack"}
 
@@ -224,13 +244,14 @@ func check_parry():
 	return success
 
 func apply_damage(dmg: int):
-	if invulnerability_timer > 0.0:
+	if invulnerability_timer > 0.0 or is_dead:
 		return
 	hp -= dmg
 	hp = max(hp, 0)
 	_update_health_bar()
 	if hp <= 0:
-		respawn()
+		is_dead = true
+		emit_signal("died")
 
 func take_hit_from(source_position: Vector2, dmg: int, knockback_scale: float = 1.0):
 	if invulnerability_timer > 0.0:
@@ -245,6 +266,7 @@ func take_hit_from(source_position: Vector2, dmg: int, knockback_scale: float = 
 
 func respawn() -> void:
 	hp = max_hp
+	is_dead = false
 	velocity = Vector2.ZERO
 	global_position = spawn_position
 	invulnerability_timer = 1.0

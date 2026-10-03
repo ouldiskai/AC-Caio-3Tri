@@ -62,13 +62,13 @@ Prototipar uma run de boss rush com 4 chefes, ordem aleatória, escolhas permane
 - Critério de aceitação:
   - Dado que o jogador acerta um parry em um ataque do boss,
   - Quando o momento da deflexão for correto,
-  - Então o jogo deve anular o dano do ataque e executar um contra-ataque imediato.
+  - Então o jogo deve anular o dano do ataque e atordoar brevemente o boss, sem causar dano ao boss.
   - E dado que o boss realiza uma sequência de ataques consecutivos,
   - Quando o jogador realiza o parry no último golpe dessa sequência,
-  - Então o jogo deve disparar o contra-ataque somente após a deflexão do último ataque.
+  - Então o efeito de atordoamento deve ocorrer somente após a deflexão do último ataque.
   - E dado que o boss realiza um único golpe,
   - Quando o jogador acerta o parry,
-  - Então o contra-ataque deve acontecer imediatamente após a deflexão.
+  - Então o boss deve ser atordoado imediatamente após a deflexão, e seu HP só pode ser reduzido pelo ataque do jogador.
 
 ### REQ-BOSS-06
 - Prioridade: Alta
@@ -120,7 +120,7 @@ Prototipar uma run de boss rush com 4 chefes, ordem aleatória, escolhas permane
   - Então o boss deve alternar entre 3 padrões de ataque distintos e reconhecíveis: porrete no chão à frente, dash para frente e bola de fogo disparada.
   - E dado que o jogador acerta o parry em um ataque do padrão,
   - Quando o ataque for defletido,
-  - Então o jogo deve executar um contra-ataque imediato e claro para sinalizar o sucesso da leitura.
+  - Então o jogo deve atordoar brevemente o boss e sinalizar claramente o sucesso, sem causar dano ao boss.
   - E dado que o protótipo não inclui a run completa,
   - Quando a validação começar,
   - Então o jogo não deve apresentar seleção de habilidades, mudança de boss ou progressão entre chefes.
@@ -136,7 +136,7 @@ Prototipar uma run de boss rush com 4 chefes, ordem aleatória, escolhas permane
   - Então o golpe deve ser suficientemente lento para que o jogador tenha tempo de identificar a janela de parry.
   - E dado que o ataque de porrete for o primeiro padrão do protótipo,
   - Quando o jogador acertar o parry,
-  - Então o jogo deve confirmar o sucesso com contra-ataque imediato e feedback claro.
+  - Então o jogo deve confirmar o sucesso com atordoamento breve e feedback claro, sem dano ao boss.
 
 ### REQ-BOSS-11
 - Prioridade: Alta
