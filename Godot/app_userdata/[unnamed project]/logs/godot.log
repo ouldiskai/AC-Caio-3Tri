@@ -9,17 +9,3 @@ ERROR: WASAPI: init_output_device error.
 WARNING: All audio drivers failed, falling back to the dummy driver.
    at: initialize (servers/audio/audio_server.cpp:258)
 
-Prototype started: boss 1v1
-Boss started attack: club_slam
-Parry failed: player took 15 damage
-Boss started attack: dash
-Boss attack hit the player for 15
-Parry failed: player took 15 damage
-Boss started attack: fireball
-Boss attack hit the player for 15
-Parry failed: player took 15 damage
-Boss started attack: club_slam
-Parry failed: player took 15 damage
-Boss started attack: dash
-Boss attack hit the player for 15
-Parry failed: player took 15 damage
