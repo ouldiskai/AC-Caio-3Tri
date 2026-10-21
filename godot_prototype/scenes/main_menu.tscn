@@ -1,6 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://cgu4n8k8konyb"]
 
-[ext_resource type="Script" path="res://godot_prototype/scripts/main_menu.gd" id="1_1b5m2"]
+[ext_resource type="Script" uid="uid://bpotacu1ek1kn" path="res://godot_prototype/scripts/main_menu.gd" id="1_1b5m2"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.09, 0.09, 0.13, 1)
@@ -9,7 +9,7 @@ corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1467994325]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,16 +18,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_1b5m2")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=858279739]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.07, 0.07, 0.10, 1)
+color = Color(0.07, 0.07, 0.1, 1)
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1999190948]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -42,7 +42,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
-[node name="Title" type="Label" parent="Panel"]
+[node name="Title" type="Label" parent="Panel" unique_id=450266467]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
@@ -52,12 +52,12 @@ offset_top = 28.0
 offset_right = 130.0
 offset_bottom = 82.0
 grow_horizontal = 2
-text = "Boss Rush"
+theme_override_font_sizes/font_size = 32
+text = "ECHOES"
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 32
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel" unique_id=1290070822]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -72,18 +72,18 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 14
 
-[node name="PlayButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="PlayButton" type="Button" parent="Panel/VBoxContainer" unique_id=1868684208]
 layout_mode = 2
 text = "Jogar"
 
-[node name="UpgradesButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="UpgradesButton" type="Button" parent="Panel/VBoxContainer" unique_id=753785801]
 layout_mode = 2
 text = "Upgrades"
 
-[node name="SettingsButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="Panel/VBoxContainer" unique_id=1280161298]
 layout_mode = 2
 text = "Configurações"
 
-[node name="QuitButton" type="Button" parent="Panel/VBoxContainer"]
+[node name="QuitButton" type="Button" parent="Panel/VBoxContainer" unique_id=383907181]
 layout_mode = 2
 text = "Sair"
